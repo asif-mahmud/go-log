@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"log"
+	"log/slog"
 	"testing"
 
 	golog "github.com/asif-mahmud/go-log"
@@ -14,18 +15,37 @@ func TestDefault(t *testing.T) {
 
 	golog.Setup(golog.WithWriter(buf))
 
-	log.Println("Hello, World")
+	type testCase struct {
+		msg     string
+		logFunc func(string, ...any)
+	}
+
+	cases := []testCase{
+		{"Hello, World", func(msg string, args ...any) {
+			log.Println(msg)
+		}},
+		{"Hello, World", slog.Info},
+	}
 
 	type msg struct {
 		Msg string `json:"msg"`
 	}
-	var m msg
 
-	if err := json.NewDecoder(buf).Decode(&m); err != nil {
-		t.Error(err)
-	}
+	for _, cs := range cases {
+		t.Run(cs.msg, func(t *testing.T) {
+			cs.logFunc(cs.msg)
 
-	if m.Msg != "Hello, World" {
-		t.Errorf("expected: %s, found: %s", "Hello, World", m.Msg)
+			var m msg
+
+			if err := json.NewDecoder(buf).Decode(&m); err != nil {
+				t.Error(err)
+			}
+
+			if m.Msg != cs.msg {
+				t.Errorf("expected: %s, found: %s", cs.msg, m.Msg)
+			}
+
+			buf.Truncate(0)
+		})
 	}
 }
