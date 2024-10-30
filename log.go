@@ -18,6 +18,26 @@ type LogOpt struct {
 // LogOptFunc definition for configuration builder function
 type LogOptFunc func(*LogOpt) *LogOpt
 
+// Logger a placeholder interface to abstract away slog.Logger methods
+// *slog.Logger can be set as a value of this interface, any other custom
+// logger should follow the same.
+type Logger interface {
+	// Debug logs debug level log message
+	Debug(string, ...any)
+
+	// Info logs info level log messages
+	Info(string, ...any)
+
+	// Warn logs warning level log messages
+	Warn(string, ...any)
+
+	// Error logs error level log messages
+	Error(string, ...any)
+}
+
+// tests for interface compatibility
+var _ = (Logger)(slog.Default())
+
 // Setup configures standard library loggers.
 // By default, it will write logs in json format and to stderr.
 func Setup(funcs ...LogOptFunc) {
