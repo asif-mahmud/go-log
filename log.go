@@ -35,7 +35,7 @@ type Logger interface {
 	Error(string, ...any)
 }
 
-// tests for interface compatibility
+// tests for Logger interface compatibility
 var _ = (Logger)(slog.Default())
 
 // Setup configures standard library loggers.
