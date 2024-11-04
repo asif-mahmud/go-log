@@ -1,9 +1,11 @@
 package golog
 
 import (
+	"fmt"
 	"io"
 	"log/slog"
 	"os"
+	"path"
 )
 
 // LogOpt configuration options for settign up built-in loggers
@@ -131,6 +133,27 @@ func WithReplacer(key string, replacer AttrReplacerFunc) LogOptFunc {
 func WithAttr(attr slog.Attr) LogOptFunc {
 	return func(lo *LogOpt) *LogOpt {
 		lo.attrs = append(lo.attrs, attr)
+		return lo
+	}
+}
+
+// WithSimpleSource enables source logging and logs source in a single string
+// in this format - file:function:line.
+func WithSimpleSource() LogOptFunc {
+	return func(lo *LogOpt) *LogOpt {
+		lo.handlerOpt.AddSource = true
+		lo.replacers[slog.SourceKey] = func(a slog.Attr) slog.Attr {
+			src := a.Value.Any().(*slog.Source)
+			if src.Function == "" {
+				return slog.Attr{}
+			}
+
+			base := path.Base(src.File)
+			return slog.String(
+				slog.SourceKey,
+				fmt.Sprintf("%s:%s:%d", base, src.Function, src.Line),
+			)
+		}
 		return lo
 	}
 }
